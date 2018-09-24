@@ -5,7 +5,7 @@
   "description": "A REST API project, part of Free Code Camp's curriculum",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "nodemon server.js"
   },
   "dependencies": {
     "express": "^4.14.0",
