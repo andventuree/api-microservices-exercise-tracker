@@ -32,6 +32,17 @@ let User = mongoose.model("User", userSchema);
 
 // ROUTES
 
+// GET api/exercise/users
+app.get("/api/exercise/users", (req, res, next) => {
+  User.find().then(users => {
+    console.log(users);
+    let savedUsers = users.map(user => {
+      return { username: user.username, _id: user._id };
+    });
+    res.status(200).json(savedUsers); //200 Ok
+  });
+});
+
 // POST /api/exercise/new-user
 app.post("/api/exercise/new-user", (req, res, next) => {
   let username = req.body.username;
