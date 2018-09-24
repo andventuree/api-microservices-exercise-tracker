@@ -18,6 +18,30 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
 });
 
+// Mongo DB schemas
+let Schema = mongoose.Schema;
+let userSchema = new Schema({
+  username: {
+    type: String,
+    required: true
+  },
+  exercises: []
+});
+
+let User = mongoose.model("User", userSchema);
+
+// ROUTES
+
+// POST /api/exercise/new-user
+app.post("/api/exercise/new-user", (req, res, next) => {
+  let username = req.body.username;
+  User.create({ username: username }, (err, data) => {
+    if (err) next(err);
+    let savedUser = { username: data.username, _id: data._id };
+    res.status(201).json(savedUser); //201 created
+  });
+});
+
 // Not found middleware
 app.use((req, res, next) => {
   return next({ status: 404, message: "not found" });
