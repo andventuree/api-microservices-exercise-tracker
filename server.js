@@ -52,6 +52,26 @@ const formatDateStr = date => {
   return `${day} ${month} ${date.getDate()} ${date.getFullYear()}`;
 };
 
+const filterLog = (data, start, end, limit) => {
+  let { _id, username, exercises } = data;
+  exercises = start
+    ? exercises.filter(entry => new Date(start) <= new Date(entry.date))
+    : exercises;
+
+  exercises = end
+    ? exercises.filter(entry => new Date(end) >= new Date(entry.date))
+    : exercises;
+
+  exercises = limit ? exercises.slice(0, limit) : exercises;
+
+  return {
+    _id: _id,
+    username: username,
+    count: exercises.length,
+    exercises: exercises
+  };
+};
+
 // ROUTES
 
 // GET api/exercise/users
@@ -70,6 +90,7 @@ app.post("/api/exercise/new-user", (req, res, next) => {
     if (err) next(err);
     const savedUser = { username: data.username, _id: data._id };
     res.status(201).json(savedUser); //201 created
+    //if user already exists, throw error that says username is taken
   });
 });
 
@@ -78,6 +99,7 @@ app.post("/api/exercise/add", (req, res, next) => {
   let { userId, description, duration, date } = req.body;
   date = new Date(date);
   duration = parseInt(duration);
+  if (isNaN(duration)) res.send("duration needs to be a number");
   const dateStr = isValid(date) ? formatDateStr(date) : formatDateStr();
   const exercise = { description, duration, date: dateStr };
 
@@ -93,6 +115,32 @@ app.post("/api/exercise/add", (req, res, next) => {
       res.status(200).json(loggedExercise);
     }
   );
+});
+
+// GET /api/exercise/log
+app.get("/api/exercise/log", (req, res, next) => {
+  // http://localhost:3000/api/exercise/log?
+  // userId=5ba9b23e0e66792c29579804
+  // &from=1999-2-10
+  // &to=2018-9-26
+  // &limit=2
+  // this query string needs to be submitted correctly, otherwise it will not work
+  console.log(req.query);
+  let { userId, limit } = req.query;
+  const start = req.query.from;
+  const end = req.query.to;
+
+  if (!userId) {
+    res.send(
+      "Must submit query like so: /api/exercise/log?userId=5ba9b23e0e66792c29579804"
+    );
+  } else {
+    User.findById({ _id: userId }, (err, data) => {
+      if (err) res.send("user not found");
+      const queriedResults = filterLog(data, start, end, limit);
+      res.status(200).json(queriedResults);
+    });
+  }
 });
 
 // Not found middleware
