@@ -86,11 +86,17 @@ app.get("/api/exercise/users", (req, res, next) => {
 
 // POST /api/exercise/new-user
 app.post("/api/exercise/new-user", (req, res, next) => {
-  User.create({ username: req.body.username }, (err, data) => {
-    if (err) next(err);
-    const savedUser = { username: data.username, _id: data._id };
-    res.status(201).json(savedUser); //201 created
-    //if user already exists, throw error that says username is taken
+  User.find({ username: req.body.username }, (err, data) => {
+    if (err) {
+      next(err);
+      User.create({ username: req.body.username }, (err, user) => {
+        if (err) next(err);
+        const savedUser = { username: user.username, _id: user._id };
+        res.status(201).json(savedUser); //201 created
+      });
+    } else {
+      res.status(401).json({ message: "Username taken already" }); //401 unauthorized
+    }
   });
 });
 
@@ -112,7 +118,7 @@ app.post("/api/exercise/add", (req, res, next) => {
         username: data.username,
         _id: data._id
       });
-      res.status(200).json(loggedExercise);
+      res.status(200).json(loggedExercise); //200 Ok
     }
   );
 });
@@ -124,16 +130,16 @@ app.get("/api/exercise/log", (req, res, next) => {
   // &from=1999-2-10
   // &to=2018-9-26
   // &limit=2
-  // this query string needs to be submitted correctly, otherwise it will not work
-  console.log(req.query);
+  // console.log(req.query);
   let { userId, limit } = req.query;
   const start = req.query.from;
   const end = req.query.to;
 
   if (!userId) {
-    res.send(
-      "Must submit query like so: /api/exercise/log?userId=5ba9b23e0e66792c29579804"
-    );
+    res.json({
+      message:
+        "Must submit query like so: /api/exercise/log?userId=5ba9b23e0e66792c29579804"
+    });
   } else {
     User.findById({ _id: userId }, (err, data) => {
       if (err) res.send("user not found");
