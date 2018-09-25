@@ -78,10 +78,10 @@ const filterLog = (data, start, end, limit) => {
 // POST /api/exercise/new-user
 app.post("/api/exercise/new-user", (req, res, next) => {
   User.find({ username: req.body.username }, (err, data) => {
-    if (err) {
-      next(err);
-      User.create({ username: req.body.username }, (err, user) => {
-        if (err) next(err);
+    if (err) next(err);
+    if (!data.length) {
+      User.create({ username: req.body.username }, (err2, user) => {
+        if (err2) next(err2);
         const savedUser = { username: user.username, _id: user._id };
         res.status(201).json(savedUser); //201 created
       });
