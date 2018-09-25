@@ -74,16 +74,7 @@ const filterLog = (data, start, end, limit) => {
 
 // ROUTES
 
-// GET api/exercise/users
-app.get("/api/exercise/users", (req, res, next) => {
-  User.find().then(users => {
-    const savedUsers = users.map(user => {
-      return { username: user.username, _id: user._id };
-    });
-    res.status(200).json(savedUsers); //200 Ok
-  });
-});
-
+// user story #1
 // POST /api/exercise/new-user
 app.post("/api/exercise/new-user", (req, res, next) => {
   User.find({ username: req.body.username }, (err, data) => {
@@ -100,6 +91,7 @@ app.post("/api/exercise/new-user", (req, res, next) => {
   });
 });
 
+// user story #2
 // POST /api/exercise/add
 app.post("/api/exercise/add", (req, res, next) => {
   let { userId, description, duration, date } = req.body;
@@ -123,6 +115,18 @@ app.post("/api/exercise/add", (req, res, next) => {
   );
 });
 
+// user story #3
+// GET api/exercise/users
+app.get("/api/exercise/users", (req, res, next) => {
+  User.find().then(users => {
+    const savedUsers = users.map(user => {
+      return { username: user.username, _id: user._id };
+    });
+    res.status(200).json(savedUsers); //200 Ok
+  });
+});
+
+// user story #4
 // GET /api/exercise/log
 app.get("/api/exercise/log", (req, res, next) => {
   // http://localhost:3000/api/exercise/log?
@@ -143,7 +147,7 @@ app.get("/api/exercise/log", (req, res, next) => {
   } else {
     User.findById({ _id: userId }, (err, data) => {
       if (err) res.send("user not found");
-      const queriedResults = filterLog(data, start, end, limit);
+      const queriedResults = filterLog(data, start, end, limit); // user story #5
       res.status(200).json(queriedResults);
     });
   }
