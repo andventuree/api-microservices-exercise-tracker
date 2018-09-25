@@ -19,24 +19,45 @@ app.get("/", (req, res) => {
 });
 
 // Mongo DB schemas
-let Schema = mongoose.Schema;
-let userSchema = new Schema({
-  username: {
-    type: String,
-    required: true
-  },
+const Schema = mongoose.Schema;
+const userSchema = new Schema({
+  username: { type: String, required: true },
   exercises: []
 });
 
-let User = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+
+// Helper Functions
+const isValid = date => date.toString() !== "Invalid Date";
+
+const formatDateStr = date => {
+  if (!date) date = new Date();
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec"
+  ];
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const month = months[date.getMonth()];
+  const day = days[date.getDay()];
+  return `${day} ${month} ${date.getDate()} ${date.getFullYear()}`;
+};
 
 // ROUTES
 
 // GET api/exercise/users
 app.get("/api/exercise/users", (req, res, next) => {
   User.find().then(users => {
-    console.log(users);
-    let savedUsers = users.map(user => {
+    const savedUsers = users.map(user => {
       return { username: user.username, _id: user._id };
     });
     res.status(200).json(savedUsers); //200 Ok
@@ -45,12 +66,33 @@ app.get("/api/exercise/users", (req, res, next) => {
 
 // POST /api/exercise/new-user
 app.post("/api/exercise/new-user", (req, res, next) => {
-  let username = req.body.username;
-  User.create({ username: username }, (err, data) => {
+  User.create({ username: req.body.username }, (err, data) => {
     if (err) next(err);
-    let savedUser = { username: data.username, _id: data._id };
+    const savedUser = { username: data.username, _id: data._id };
     res.status(201).json(savedUser); //201 created
   });
+});
+
+// POST /api/exercise/add
+app.post("/api/exercise/add", (req, res, next) => {
+  let { userId, description, duration, date } = req.body;
+  date = new Date(date);
+  duration = parseInt(duration);
+  const dateStr = isValid(date) ? formatDateStr(date) : formatDateStr();
+  const exercise = { description, duration, date: dateStr };
+
+  User.findByIdAndUpdate(
+    { _id: userId },
+    { $push: { exercises: exercise } },
+    (err1, data) => {
+      if (err1) next(err1);
+      const loggedExercise = Object.assign(exercise, {
+        username: data.username,
+        _id: data._id
+      });
+      res.status(200).json(loggedExercise);
+    }
+  );
 });
 
 // Not found middleware
